@@ -11,13 +11,13 @@ def show_cluster(X, clusters, cluster_name, size=None, hide=False):
     use scaled data when using show cluster, as it assumes scaleing. 
     return a scatter plot of the clusters and the updated dataframe passed in to include the clusters
     '''
-    kmeans = KMeans(n_clusters=clusters)
+    kmeans = KMeans(n_clusters=clusters, random_state=902)
     kmeans.fit(X)
     X[cluster_name] = kmeans.predict(X)
     if hide == False:
         plt.figure(figsize=(16,9))
         plt.title('{} VS {}'.format(X.columns[0], X.columns[1]))
-        sns.scatterplot(x= X.columns[0], y= X.columns[1], data = X, hue = cluster_name, size=size, sizes = (5,50))
+        sns.scatterplot(x= X.columns[0], y= X.columns[1], data = X, hue = cluster_name, size=size, sizes = (10,75))
         plt.show()
     return X
    

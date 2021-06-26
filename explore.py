@@ -26,3 +26,15 @@ def plot_variable_pairs(df, cont_vars = 2):
         plt.figure(figsize=(8,3))
         sns.regplot(data=df, x=i[0], y =i[1],line_kws={"color":"red"})
         plt.show()
+
+        
+def get_heatmap(df, target):
+    '''
+    This method will return a heatmap of all variables and there relation to churn
+    '''
+    plt.figure(figsize=(15,12))
+    heatmap = sns.heatmap(df.corr()[[target]].sort_values(by=target, ascending=False), annot=True)
+    heatmap.set_title('Feautures  Correlating with {}'.format(target))
+    plt.show()
+    return heatmap
+
