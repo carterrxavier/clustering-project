@@ -85,5 +85,73 @@ def get_price(X_train, market):
     X_train = X_train[X_train['price']== market]
     return X_train
 
-
     
+    
+def get_t_test(t_var, df, target, alpha):
+    '''
+        This method will produce a 2 tailed t test  equate the p value to the alpha to determine whether the null hypothesis can be rejected.
+    '''
+    for i in t_var:
+        t, p = stats.ttest_ind(df[i],df[target], equal_var=False)
+        print('Null Hypothesis: {} is not correlated to value '.format(i))
+        print('Alternative hypothesis:  {} is correlated to value '.format(i))
+        if p < alpha:
+            print('p value {} is less than alpha {} , we reject our null hypothesis'.format(p,alpha))
+        else:
+            print('p value {} is not less than alpha {} , we  fail to reject our null hypothesis'.format(p,alpha))
+        print('-------------------------------------')
+        
+def get_pearsons(con_var, target, alpha, df):
+     for i in con_var:
+        t, p = stats.pearsonr(df[i],df[target])
+        print('Null Hypothesis: {} is not correlated to value '.format(i))
+        print('Alternative hypothesis:  {} is correlated to value '.format(i))
+        if p < alpha:
+            print('p value {} is less than alpha {} , we reject our null hypothesis'.format(p,alpha))
+        else:
+            print('p value {} is not less than alpha {} , we  fail to reject our null hypothesis'.format(p,alpha))
+        print('-------------------------------------')
+        
+
+def get_model_results(X_train, y_train, X, y, target, model='linear', alpha = 0, power = 0, graph = False, degree=2):
+    results = y.copy()
+    
+    if model == "linear":
+        lm = LinearRegression(normalize=True)
+        lm.fit(X_train, y_train)  
+        results['pred'] = lm.predict(X)
+        
+    elif model == 'lasso':
+        lasso = LassoLars(alpha=alpha)
+        lasso.fit(X_train, y_train)
+        results['pred'] = lasso.predict(X)
+        
+    elif model == 'glm':
+        glm = TweedieRegressor(power=power, alpha=alpha)
+        glm.fit(X_train, y_train)
+        results['pred'] = glm.predict(X)
+    elif model == 'poly':
+        pf = PolynomialFeatures(degree=degree)
+        
+        X_train_degree2 = pf.fit_transform(X_train)
+        X_degree_2 = pf.transform(X)
+        
+        
+        lm = LinearRegression(normalize=True)
+        lm.fit(X_train_degree2, y_train)  
+        results['pred'] = lm.predict(X_degree_2)
+        
+    results = get_risiduals(results, y[target],results.pred)
+    rmse =    regression_errors(y[target],results.pred)[2]
+    r_2  =    regression_errors(y[target],results.pred)[5]
+    btb = better_than_baseline(y[target],results.pred)
+
+    print('RMSE Score: {}'.format(rmse)) 
+    print('r2 Score: {}'.format(r_2))
+    print('Better than Basline: {}'.format(btb))
+
+    if graph == True:
+        plot_residuals(results[target], results.pred, results.risiduals, results.baseline_risiduals)
+    
+    return results
+
