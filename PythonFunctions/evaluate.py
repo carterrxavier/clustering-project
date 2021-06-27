@@ -2,11 +2,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LassoLars, TweedieRegressor
 from sklearn.feature_selection import SelectKBest, f_regression, RFE
-import warnings
-
-
+from sklearn.preprocessing import PolynomialFeatures
+import scipy.stats as stats
 
 
 def get_risiduals(df ,act, pred):
@@ -46,25 +45,17 @@ def regression_errors(y, yhat):
     
     return sse, mse, rmse, ess, tss, r_2
 
-def baseline_errors(y, measure="Mean"):
-    if measure == "Mean":
-        sse_baseline = ((y-y.mean()) ** 2).sum()
-        mse_baseline = sse_baseline / y.shape[0]
-        rmse_baseline = math.sqrt(mse_baseline)
-    else:
-        sse_baseline = ((y-y.median()) ** 2).sum()
-        mse_baseline = sse_baseline / y.shape[0]
-        rmse_baseline = math.sqrt(mse_baseline)
-        
-    
+def baseline_errors(y):
+    sse_baseline = ((y - y.mean()) ** 2).sum()
+    mse_baseline = sse_baseline / y.shape[0]
+    rmse_baseline = math.sqrt(mse_baseline)
     return sse_baseline, mse_baseline, rmse_baseline
 
-def better_than_baseline(y, yhat, measure="Mean"):
-    if measure == "Mean":
-        return regression_errors(y,yhat)[2] < baseline_errors(y, measure = "Mean")[2]
-    else:
-        return regression_errors(y,yhat)[2] < baseline_errors(y, measure = "Median")[2]
-    
+
+def better_than_baseline(y, yhat):
+    print('Baseline:{}'.format(baseline))
+    run = regression_errors(y,yhat)[2] < baseline
+    return run
 
 def select_kbest(X,y,top):
     f_selector = SelectKBest(f_regression, top)
@@ -81,7 +72,7 @@ def select_rfe(X, y, n):
     rfe_feautures = X.loc[:,mask].columns.tolist()
     return rfe_feautures
 
-def get_price(X_train, market):
+def get_price(X_train,market):
     X_train = X_train[X_train['price']== market]
     return X_train
 
@@ -113,11 +104,11 @@ def get_pearsons(con_var, target, alpha, df):
         print('-------------------------------------')
         
 
-def get_model_results(X_train, y_train, X, y, target, model='linear', alpha = 0, power = 0, graph = False, degree=2):
+def get_model_results(X_train, y_train, X, y, target, model='linear', normalize=False, alpha = 0, power = 0, degree=2 , graph = False):
     results = y.copy()
     
     if model == "linear":
-        lm = LinearRegression(normalize=True)
+        lm = LinearRegression(normalize=normalize)
         lm.fit(X_train, y_train)  
         results['pred'] = lm.predict(X)
         
@@ -141,17 +132,17 @@ def get_model_results(X_train, y_train, X, y, target, model='linear', alpha = 0,
         lm.fit(X_train_degree2, y_train)  
         results['pred'] = lm.predict(X_degree_2)
         
-    results = get_risiduals(results, y[target],results.pred)
+    results = get_risiduals(results, y[target], results.pred)
     rmse =    regression_errors(y[target],results.pred)[2]
     r_2  =    regression_errors(y[target],results.pred)[5]
-    btb = better_than_baseline(y[target],results.pred)
 
+    print('r2 Score:  {}'.format(r_2))
     print('RMSE Score: {}'.format(rmse)) 
-    print('r2 Score: {}'.format(r_2))
-    print('Better than Basline: {}'.format(btb))
+  
+   
 
     if graph == True:
         plot_residuals(results[target], results.pred, results.risiduals, results.baseline_risiduals)
     
-    return results
+    return results, rmse
 

@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
-from env import host, user ,password
+from PythonFunctions.env import host, user ,password
 from sklearn.model_selection import train_test_split
+import math
 import os
 
 
@@ -119,6 +120,8 @@ def zillow_engineering(zillow_df):
     zillow_df['taxrate'] = round(zillow_df['taxamount']/zillow_df['taxvaluedollarcnt'] * 100 ,2)
     zillow_df['transactiondate'] = pd.to_datetime(zillow_df['transactiondate'],dayfirst=True)
     zillow_df['transactionmonth'] = zillow_df['transactiondate'].dt.month
+    zillow_df['log10price'] = np.log10(zillow_df['taxvaluedollarcnt'])
+
     
     return zillow_df
 
