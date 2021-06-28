@@ -2,7 +2,7 @@
 
 
 ## 1 Project Overview 
-- The basis of this project is to find key drivers for churn within a given dataset. After determining what key drivers are causeing people to leave or terminate their services, we use machine learning and statistacal tests to prove that the feautures that we selected are reasons for people leaving.
+- The basis of this project is to find key drivers for logerror by utlizing clustering.
 
 ## Deliverables 
 - The README file that gives context to the project.
