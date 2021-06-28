@@ -2,9 +2,8 @@ import numpy as np
 import pandas as pd
 from PythonFunctions.env import host, user ,password
 from sklearn.model_selection import train_test_split
-import math
+import geopy.distance
 import os
-
 
 def get_connection(db, user = user, host = host, password = password):
     return f'mysql+pymysql://{user}:{password}@{host}/{db}'
@@ -121,8 +120,108 @@ def zillow_engineering(zillow_df):
     zillow_df['transactiondate'] = pd.to_datetime(zillow_df['transactiondate'],dayfirst=True)
     zillow_df['transactionmonth'] = zillow_df['transactiondate'].dt.month
     zillow_df['log10price'] = np.log10(zillow_df['taxvaluedollarcnt'])
-
     
+    zillow_df['latitude'] = zillow_df['latitude'].astype(str)
+    zillow_df['longitude'] = zillow_df['longitude'].astype(str)
+    
+    
+    for i in range(len(zillow_df)):
+        zillow_df['latitude'][i].replace('.','')
+        zillow_df['longitude'][i].replace('.','')
+        
+        split1 = zillow_df['latitude'][i][:2]
+        split2 = zillow_df['latitude'][i][2:-2]
+        new = split1 + '.' + split2
+        zillow_df['latitude'][i] = new
+        
+        split1 = zillow_df['longitude'][i][:4]
+        split2 = zillow_df['longitude'][i][4:-2]
+        new = split1 + '.' + split2
+        zillow_df['longitude'][i] = new
+        
+    zillow_df['latitude'] = round(zillow_df['latitude'].astype(float), 6)
+    zillow_df['longitude'] = round(zillow_df['longitude'].astype(float), 6)
+                
     return zillow_df
 
+cities = []
+#---------LA County Major Cities--------
+LosAngeles    = [34.052234, -118.243684] #0
+Palmdale      = [34.579434, -118.243684] #1
+Lancaster     = [34.686785, -118.154163] #2
+Santa_Clarita = [34.391664, -118.542586] #3
+Long_Beach    = [33.770050, -118.193739] #4
+Glendale      = [34.142507, -118.255075] #5
+Pasadena      = [34.147784, -118.144515] #6
+Ponoma        = [34.055103, -117.749990] #7
+Torrance      = [33.835849, -118.340628] #8
+Malibu        = [34.025921, -118.779757] #9
+#-------Orange County Major Cities-----
+Anahiem       = [33.835293, -117.914503] #10
+Santa_Ana     = [33.745573, -117.867833] #11
+Irvine        = [33.683947, -117.794694] #12
+Newport_Beach = [33.618910, -117.928946] #13
+Huntington    = [33.660297, -117.999226] #14
+#------Ventura County Major Cities -----
+Simi_Valley   = [34.055103, -117.749990] #15
+Thousand_oaks = [34.170560, -118.837593] #16
+Oxnard        = [34.197504, -119.177051] #17
 
+cities.extend([
+    LosAngeles,  
+    Palmdale,
+    Lancaster,    
+    Santa_Clarita, 
+    Long_Beach,
+    Glendale,     
+    Pasadena,      
+    Ponoma,   
+    Torrance,      
+    Malibu,       
+    Anahiem,       
+    Santa_Ana,     
+    Irvine,        
+    Newport_Beach, 
+    Huntington,    
+    Simi_Valley,   
+    Thousand_oaks, 
+    Oxnard])
+
+#uses geophy to get didtance between 3 points in miles
+def distance(lat1, lon1, lat2, lon2):
+    cor1 = (lat1, lon1)
+    cor2 = (lat2, lon2)
+    return geopy.distance.distance(cor1, cor2).miles;
+
+
+# checks the current house location to see which city is the closest       
+def get_closest(houselat,houselon):
+    results = []
+    city = 0 
+    for i in cities:
+        result = distance(i[0], i[1], houselat, houselon)
+        results.append([city ,result])
+        city = city + 1 
+    results.sort(key= lambda x:x[1])
+    return results[0]
+
+ 
+def get_city_and_distance(df):
+    #initialize columns first
+    df['closestcity'] = 0
+    df['distancefromcity'] = 0
+    
+    for i in range(len(df)):
+        city_and_distance = get_closest(df.latitude[i], df.longitude[i])
+        df['closestcity'][i] = city_and_distance[0]
+        df['distancefromcity'][i] = city_and_distance[1]
+    return df
+
+    
+
+
+
+    
+    
+    
+    
