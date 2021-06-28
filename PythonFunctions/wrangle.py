@@ -51,7 +51,7 @@ def split_for_model(df):
     Returns train, validate, and test dfs.
     '''
     train_validate, test = train_test_split(df, test_size=.2, 
-                                        random_state=321)
+                                        random_state=765)
     train, validate = train_test_split(train_validate, test_size=.3, 
                                    random_state=231)
     
@@ -187,7 +187,7 @@ cities.extend([
     Thousand_oaks, 
     Oxnard])
 
-#uses geophy to get didtance between 3 points in miles
+#uses geophy to get distance between 2 points in miles
 def distance(lat1, lon1, lat2, lon2):
     cor1 = (lat1, lon1)
     cor2 = (lat2, lon2)
